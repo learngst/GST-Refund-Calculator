@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMS GST Refund Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Define custom styles for modern aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e6e9fc 0%, #c5d4f3 100%); /* New light purple-blue gradient */
+            color: #1f2937; /* Dark gray text color */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+        /* Glass morphism effect for main container and modal */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.9); /* Lighter background */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+        /* Modern table styling */
+        .glass-table {
+            background: #fff;
+            border-radius: 1rem;
+            overflow: hidden;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        thead th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #334155;
+            text-align: center;
+            padding: 0.5rem 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 0.8rem;
+        }
+        thead th.input-col:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+        tbody td {
+            padding: 0.25rem; /* Reduced padding */
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+        }
+        /* New custom colors for refund columns based on image */
+        .highlight-inv-refund {
+            background: #d1fae5 !important;
+            color: #065f46 !important;
+            font-weight: 600;
+        }
+        .highlight-zr-refund {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            font-weight: 600;
+        }
+        .total-fy-row {
+          background-color: #e2e8f0 !important;
+          font-weight: 700;
+          color: #1f2937;
+        }
+        /* Input field styling with transitions */
+        input[type="text"] {
+            width: 100%;
+            max-width: 100px; /* Increased max-width */
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            border-radius: 0.5rem;
+            text-align: right;
+            transition: all 0.3s ease;
+            color: #1f2937;
+            font-size: 0.75rem;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.5);
+        }
+        input[type="text"]:read-only {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+        /* Modern button styling */
+        .button {
+            background: #3b82f6; /* Blue button */
+            color: white;
+            padding: 0.6rem 1.25rem;
+            border: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            margin: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .button-secondary {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #3b82f6;
+        }
+        .button-secondary:hover {
+            background: #e2e8f0;
+            color: #2563eb;
+        }
+        /* Modern modal styling */
+        .modal {
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 600px;
+            color: #1f2937;
+        }
+        .close-btn {
+            color: #1f2937;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.2s ease;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: #3b82f6;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .message-box {
+            text-align: center;
+            padding: 0.75rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 0.5rem;
+            border: 1px solid #6ee7b7;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.8rem;
+        }
+        .formula-row {
+          font-size: 0.65rem;
+        }
+        .text-2xl {
+          font-size: 1.5rem;
+        }
+        /* Specific styling for the new provision modal */
+        .provision-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            background: #f8fafc;
+            margin-bottom: 1rem;
+        }
+        /* Styling for the new formula representation */
+        .formula-display-container {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.25rem; /* Increased base font size */
+            text-align: center;
+            padding: 1rem;
+        }
+        .formula-display-container .title {
+            font-weight: 700;
+            color: #2563eb;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .formula-display-container .formula-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .formula-display-container .curly-bracket {
+            font-size: 6rem; /* Increased size for curly brackets */
+            line-height: 1;
+            font-weight: 300;
+            color: #1f2937;
+            user-select: none;
+        }
+        .formula-display-container .fraction-container {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 0.5rem;
+            text-align: center;
+        }
+        .formula-display-container .numerator {
+            display: block;
+            padding-bottom: 0.1rem;
+            font-weight: 600;
+        }
+        .formula-display-container .denominator {
+            display: block;
+            padding-top: 0.1rem;
+            font-weight: 600;
+        }
+        .formula-display-container .fraction-line {
+            height: 1px;
+            background-color: #4b5563;
+        }
+        .formula-display-container .operator {
+            font-weight: 700;
+            margin: 0 0.5rem;
+            color: #dc2626;
+        }
+        .formula-display-container .minus-operator {
+            font-weight: 700;
+            margin: 0 1.5rem;
+            color: #dc2626;
+            font-size: 2rem;
+        }
+        .provision-modal-content {
+          max-width: 90%;
+        }
+    </style>
+</head>
+<body>
+  <div class="container p-4 glass-container">
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-gray-800 mb-1">KMS GST Refund Calculator</h2>
+      <p class="text-sm text-gray-600 mb-4">Calculation of Refund under Inverted Duty Structure and Refund of ITC paid on Exports of Goods and Services without payment of Tax</p>
+    </div>
+    
+    <div class="flex flex-wrap justify-center mb-4 gap-2">
+      <button class="button" onclick="loadSampleData()">Load Sample Data</button>
+      <button class="button button-secondary" onclick="resetCalculator()">Reset Data</button>
+      <button class="button button-secondary" onclick="openInvertedProvisionModal()">Inverted Rated Refund (Provisions)</button>
+      <button class="button button-secondary" onclick="openExportProvisionModal()">Zero Rate ITC Refund (Provisions)</button>
+      <button class="button" onclick="downloadTemplate()">Download Excel Format</button>
+      <button class="button button-secondary" onclick="openUploadModal()">Upload Excel Data</button>
+      <button class="button" onclick="exportToExcel()">Download Data as Excel</button>
+    </div>
+    <div id="status-message" class="message-box" style="display:none;"></div>
+
+    <div class="table-container overflow-x-auto rounded-lg shadow-xl">
+      <table class="glass-table min-w-full" id="gst-table">
+        <thead>
+          <tr>
+            <th class="p-2 sticky left-0"></th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_actual" onclick="openColumnModal('actual', 'Zero Rated Supply (Actual Value)')">Zero Rated <br>Supply (Actual)</th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_fob" onclick="openColumnModal('fob', 'Zero Rated Supply (FOB Value)')">Zero Rated <br>Supply (FOB)</th>
+            <th class="p-2 whitespace-normal" title="Zero Rated Min of Actual or FOB">Zero Rated <br>Min of A or B</th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_noninv" onclick="openColumnModal('noninv', 'Non Inverted Taxable Supply')">Non Inverted <br>Taxable Supply</th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_inv" onclick="openColumnModal('inv', 'Inverted Taxable Supply')">Inverted <br>Taxable Supply</th>
+            <th class="p-2 whitespace-normal" title="Aggregate Turnover">Aggregate <br>Turnover</th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_tax_payable" onclick="openColumnModal('tax_payable', 'Tax Payable on Inverted Supply')">Tax Payable on <br>Inverted Supply</th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_itc_in" onclick="openColumnModal('itc_in', 'ITC on Account of Inputs Goods')">ITC on Account <br>of Inputs Goods</th>
+            <th class="p-2 input-col whitespace-normal" title="Click to paste data" id="header_itc_ser" onclick="openColumnModal('itc_ser', 'ITC on Account of Input Service')">ITC on Account <br>of Input Service</th>
+            <th class="p-2 whitespace-normal" title="Total ITC">Total <br>ITC</th>
+            <th class="p-2 highlight-inv-refund whitespace-normal" title="Inverted Tax Structure Refund">Inverted Tax <br>Structure Refund</th>
+            <th class="p-2 highlight-zr-refund whitespace-normal" title="Zero rated supply Refund">Zero Rated <br>Supply Refund</th>
+          </tr>
+          <tr class="formula-row text-gray-700 italic">
+            <td class="bg-white/20 sticky left-0 font-normal">Table or Formula</td>
+            <td>A</td>
+            <td>B</td>
+            <td>C= Min of A or B</td>
+            <td>D</td>
+            <td>E</td>
+            <td>F = A+D+E</td>
+            <td>G</td>
+            <td>H</td>
+            <td>I</td>
+            <td>J = H + I</td>
+            <td>K = (H x E / F)-(G x H/J)</td>
+            <td>L = C*J/(C+D+E)</td>
+          </tr>
+        </thead>
+        <tbody>
+          <script>
+            const months = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
+            for (let i = 0; i < 12; i++) {
+              document.write(`
+                <tr>
+                  <td class="font-medium text-gray-800 sticky left-0 bg-white/20">${months[i]}</td>
+                  <td><input type="text" id="actual_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="fob_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="min_val_${i}" value="" readonly></td>
+                  <td><input type="text" id="noninv_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="inv_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="agg_turnover_${i}" value="" readonly></td>
+                  <td><input type="text" id="tax_payable_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="itc_in_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="itc_ser_${i}" value="" oninput="recalc(${i})"></td>
+                  <td><input type="text" id="total_itc_${i}" value="" readonly></td>
+                  <td class="highlight-inv-refund"><input type="text" id="inv_refund_${i}" value="" readonly></td>
+                  <td class="highlight-zr-refund"><input type="text" id="zr_refund_${i}" value="" readonly></td>
+                </tr>
+              `);
+            }
+          </script>
+          <tr class="font-bold total-fy-row">
+            <td class="bg-white/30 sticky left-0 font-semibold">Total FY</td>
+            <td><input type="text" id="sum_actual" value="" readonly></td>
+            <td><input type="text" id="sum_fob" value="" readonly></td>
+            <td><input type="text" id="sum_min_val" value="" readonly></td>
+            <td><input type="text" id="sum_noninv" value="" readonly></td>
+            <td><input type="text" id="sum_inv" value="" readonly></td>
+            <td><input type="text" id="sum_agg_turnover" value="" readonly></td>
+            <td><input type="text" id="sum_tax_payable" value="" readonly></td>
+            <td><input type="text" id="sum_itc_in" value="" readonly></td>
+            <td><input type="text" id="sum_itc_ser" value="" readonly></td>
+            <td><input type="text" id="sum_total_itc" value="" readonly></td>
+            <td class="highlight-inv-refund"><input type="text" id="sum_inv_refund" value="" readonly></td>
+            <td class="highlight-zr-refund"><input type="text" id="sum_zr_refund" value="" readonly></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="data-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3 class="text-xl font-bold mb-3">Paste Data for <span id="modal-column-title"></span></h3>
+      <p class="text-xs text-gray-700 mb-3">
+        Copy the data for all 12 months of the <span class="font-bold" id="modal-column-name"></span> column and paste it below.
+      </p>
+      <textarea id="data-paste-area" class="w-full p-2 border rounded-xl bg-white/20 focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all duration-300" rows="10" placeholder="Paste your data here..."></textarea>
+      <div class="flex justify-center mt-4">
+        <button class="button" onclick="loadPastedData()">Update Calculator</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="inverted-provision-modal" class="modal">
+    <div class="modal-content provision-modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3 class="text-2xl font-bold mb-4 text-center bg-gray-200 py-3 rounded-lg">GST Refund under Inverted Duty Structure</h3>
+      <div class="provision-box my-6">
+        <h4 class="font-bold text-xl text-center mb-4">Refund of ITC accumulated due to Inverted Tax Structure - RULE 89(5)</h4>
+        <div class="formula-display-container text-base text-center font-bold">
+            <p class="mb-4">Maximum Refund Amount = { NET ITC X (Turnover of Inverted Rated Supply of Goods and Services / Adjusted Total Turnover) } - { Tax payable on such Inverted Rated Supply of Goods and Services X (NET ITC / ITC availed on Input Goods and Input Services) }</p>
+        </div>
+      </div>
+      <p class="mt-6 text-lg font-semibold">
+        <span class="blue-text font-bold">Net ITC</span> = ITC availed on Input Goods during the relevant period<br>
+        <span class="blue-text font-bold">Adjusted Total Turnover</span> = Domestic Supply + Zero Rated Supply (Excluding Domestic Exempt Supplies)<br>
+        (Refer Rule 89 (4) (E))
+      </p>
+    </div>
+  </div>
+
+  <div id="export-provision-modal" class="modal">
+    <div class="modal-content provision-modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3 class="text-2xl font-bold mb-4 text-center bg-gray-200 py-3 rounded-lg">GST Refund under Export/Zero-Rated Supply</h3>
+      <div class="provision-box my-6">
+        <h4 class="font-bold text-xl text-center mb-4">Refund of ITC paid on Exports of Goods and Services without payment of Tax - RULE 89(4)</h4>
+        <div class="formula-display-container text-base text-center font-bold">
+            <p class="mb-4">Refund Amount = Net ITC X (Turnover of zero-rated supply of Goods + Turnover of zero-rated supply of Services) / Adjusted Total Turnover</p>
+        </div>
+      </div>
+      <div class="mt-6 text-lg">
+        <p class="font-semibold"><span class="blue-text font-bold">Turnover of zero-rated supply of goods</span></p>
+        <p class="text-base mb-4">Value of zero-rated supply of goods (without payment of tax) made during the relevant period, excluding exempt supplies.</p>
+        
+        <p class="font-semibold"><span class="blue-text font-bold">Turnover of zero-rated supply of services</span></p>
+        <p class="text-base mb-4">Aggregate of:
+            Payments received for zero-rated supply of services during the relevant period, and
+            Zero-rated supply of services completed during the relevant period for which payment had been received in advance in any period prior to the relevant period.</p>
+
+        <p class="font-semibold"><span class="blue-text font-bold">Net ITC</span></p>
+        <p class="text-base mb-4">Input tax credit availed on inputs and input services during the relevant period (does not include ITC on capital goods).</p>
+
+        <p class="font-semibold"><span class="blue-text font-bold">Adjusted Total Turnover</span></p>
+        <p class="text-base mb-4">Sum of turnover in a State/UT (excluding exempt supplies) plus turnover of zero-rated supply, during the relevant period.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="welcome-modal" class="modal">
+    <div class="modal-content">
+      <h3 class="text-2xl font-bold mb-4">Welcome to the GST Refund Calculator!</h3>
+      <p class="text-base text-gray-700 mb-6">
+        This calculator helps you determine GST refunds for inverted duty structures and zero-rated supplies.
+      </p>
+      <p class="text-base text-gray-700 mb-6">
+        To use this tool, you can either enter data manually or paste entire columns of data directly into the input fields. Simply click on a column header (e.g., "Zero Rated Supply (Actual)") and a window will pop up where you can paste data for all 12 months at once.
+      </p>
+      <button class="button" onclick="closeWelcomeModal()">Got It!</button>
+    </div>
+  </div>
+
+  <div id="upload-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3 class="text-xl font-bold mb-3">Upload Excel Data</h3>
+      <p class="text-xs text-gray-700 mb-3">
+        Download the format, fill it with your data, and upload the file here.
+      </p>
+      <input type="file" id="file-input" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="w-full p-2 border rounded-xl bg-white/20 mb-4">
+      <div class="flex justify-center mt-4">
+        <button class="button" onclick="handleFileUpload()">Upload and Update</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script>
+    // format function updated to use Indian number style and remove decimals
+    const format = (num) => {
+      if (num === 0) return "0";
+      if (!num || isNaN(num)) return "";
+      let parts = num.toString().split('.');
+      let lastThree = parts[0].substring(parts[0].length - 3);
+      let otherNumbers = parts[0].substring(0, parts[0].length - 3);
+      if (otherNumbers != '') {
+          lastThree = ',' + lastThree;
+      }
+      let res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+      return res;
+    };
+    
+    // getFloatVal is used to parse input values
+    const getFloatVal = (id) => {
+        const element = document.getElementById(id);
+        if (!element) {
+            return 0;
+        }
+        return parseFloat(element.value.replace(/,/g, '')) || 0;
+    };
+    
+    let activeColumnId = null;
+
+    function openColumnModal(columnId, columnName) {
+        activeColumnId = columnId;
+        document.getElementById('modal-column-title').innerText = columnName;
+        document.getElementById('modal-column-name').innerText = columnName;
+        document.getElementById('data-modal').style.display = 'flex';
+        document.getElementById('data-paste-area').value = ''; // Clear previous data
+        document.getElementById('data-paste-area').focus();
+    }
+    
+    function closeDataModal() {
+        document.getElementById('data-modal').style.display = 'none';
+        activeColumnId = null;
+    }
+    
+    function openInvertedProvisionModal() {
+        document.getElementById('inverted-provision-modal').style.display = 'flex';
+    }
+
+    function openExportProvisionModal() {
+        document.getElementById('export-provision-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('data-modal').style.display = 'none';
+        document.getElementById('inverted-provision-modal').style.display = 'none';
+        document.getElementById('export-provision-modal').style.display = 'none';
+        document.getElementById('welcome-modal').style.display = 'none';
+        document.getElementById('upload-modal').style.display = 'none';
+        activeColumnId = null;
+    }
+    
+    function closeWelcomeModal() {
+        document.getElementById('welcome-modal').style.display = 'none';
+        localStorage.setItem('showWelcomeMessage', 'false');
+    }
+
+    function openUploadModal() {
+      document.getElementById('upload-modal').style.display = 'flex';
+    }
+
+    function handleFileUpload() {
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            showMessage("Please select a file to upload.", 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = event.target.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            // Assuming the first row is headers and data starts from the second row
+            jsonData.slice(1).forEach((row, i) => {
+                if (i < 12) {
+                    document.getElementById(`actual_${i}`).value = row[1] || '';
+                    document.getElementById(`fob_${i}`).value = row[2] || '';
+                    document.getElementById(`noninv_${i}`).value = row[3] || '';
+                    document.getElementById(`inv_${i}`).value = row[4] || '';
+                    document.getElementById(`tax_payable_${i}`).value = row[5] || '';
+                    document.getElementById(`itc_in_${i}`).value = row[6] || '';
+                    document.getElementById(`itc_ser_${i}`).value = row[7] || '';
+                    recalc(i);
+                }
+            });
+
+            closeModal();
+            showMessage('Data uploaded successfully!');
+        };
+
+        reader.readAsBinaryString(file);
+    }
+
+    function downloadTemplate() {
+        const headers = [
+            "Month", "Zero Rated Supply (Actual Value)", "Zero Rated Supply (FOB Value)", 
+            "Non Inverted Taxable Supply", "Inverted Taxable Supply", "Tax Payable on Inverted Supply", 
+            "ITC on Account of Inputs Goods", "ITC on Account of Input Service"
+        ];
+        const months = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
+        
+        let data = [headers];
+        months.forEach(month => {
+            data.push([month, "", "", "", "", "", "", ""]);
+        });
+        
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "GST Data");
+        
+        XLSX.writeFile(workbook, "GST_Refund_Template.xlsx");
+        showMessage('Download started. Please fill the data and re-upload.');
+    }
+    
+    function loadPastedData() {
+        if (!activeColumnId) return;
+
+        const data = document.getElementById('data-paste-area').value;
+        const lines = data.trim().split("\n");
+        
+        for (let i = 0; i < lines.length && i < 12; i++) {
+            const line = lines[i];
+            const value = line.replace(/,/g, '').trim();
+            const inputElement = document.getElementById(`${activeColumnId}_${i}`);
+            if (inputElement) {
+                inputElement.value = value;
+            }
+        }
+
+        for (let i = 0; i < 12; i++) {
+            recalc(i);
+        }
+        
+        closeDataModal();
+        showMessage(`Data for ${document.getElementById('modal-column-name').innerText} updated successfully!`);
+    }
+
+    function recalc(rowIndex) {
+      let actual = getFloatVal(`actual_${rowIndex}`);
+      let fob = getFloatVal(`fob_${rowIndex}`);
+      let noninv = getFloatVal(`noninv_${rowIndex}`);
+      let inv = getFloatVal(`inv_${rowIndex}`);
+      let tax_payable = getFloatVal(`tax_payable_${rowIndex}`);
+      let itc_in = getFloatVal(`itc_in_${rowIndex}`);
+      let itc_ser = getFloatVal(`itc_ser_${rowIndex}`);
+    
+      let min_val = Math.min(actual, fob);
+      let agg_turnover = actual + noninv + inv;
+      let total_itc = itc_in + itc_ser;
+    
+      let inv_refund = 0;
+      if (agg_turnover !== 0 && total_itc !== 0) {
+        inv_refund = (itc_in * inv / agg_turnover) - (tax_payable * itc_in / total_itc);
+      }
+      
+      let zr_refund = 0;
+      if ((min_val + noninv + inv) !== 0) {
+        zr_refund = (min_val * total_itc) / (min_val + noninv + inv);
+      }
+    
+      document.getElementById(`min_val_${rowIndex}`).value = format(min_val);
+      document.getElementById(`agg_turnover_${rowIndex}`).value = format(agg_turnover);
+      document.getElementById(`total_itc_${rowIndex}`).value = format(total_itc);
+      document.getElementById(`inv_refund_${rowIndex}`).value = format(inv_refund);
+      document.getElementById(`zr_refund_${rowIndex}`).value = format(zr_refund);
+    
+      recalcTotal();
+    }
+    
+    function recalcTotal() {
+      let sum_actual = 0, sum_fob = 0, sum_min_val = 0, sum_noninv = 0, sum_inv = 0;
+      let sum_agg_turnover = 0, sum_tax_payable = 0;
+      let sum_itc_in = 0, sum_itc_ser = 0, sum_total_itc = 0;
+    
+      for (let i = 0; i < 12; i++) {
+        sum_actual += getFloatVal(`actual_${i}`);
+        sum_fob += getFloatVal(`fob_${i}`);
+        sum_min_val += getFloatVal(`min_val_${i}`);
+        sum_noninv += getFloatVal(`noninv_${i}`);
+        sum_inv += getFloatVal(`inv_${i}`);
+        sum_agg_turnover += getFloatVal(`agg_turnover_${i}`);
+        sum_tax_payable += getFloatVal(`tax_payable_${i}`);
+        sum_itc_in += getFloatVal(`itc_in_${i}`);
+        sum_itc_ser += getFloatVal(`itc_ser_${i}`);
+        sum_total_itc += getFloatVal(`total_itc_${i}`);
+      }
+    
+      document.getElementById("sum_actual").value = format(sum_actual);
+      document.getElementById("sum_fob").value = format(sum_fob);
+      document.getElementById("sum_min_val").value = format(sum_min_val);
+      document.getElementById("sum_noninv").value = format(sum_noninv);
+      document.getElementById("sum_inv").value = format(sum_inv);
+      document.getElementById("sum_agg_turnover").value = format(sum_agg_turnover);
+      document.getElementById("sum_tax_payable").value = format(sum_tax_payable);
+      document.getElementById("sum_itc_in").value = format(sum_itc_in);
+      document.getElementById("sum_itc_ser").value = format(sum_itc_ser);
+      document.getElementById("sum_total_itc").value = format(sum_total_itc);
+    
+      // Zero Rated Supply Refund formula for Total FY:
+      let total_zero_rated_total_turnover = sum_min_val + sum_noninv + sum_inv;
+      let total_zr_refund = 0;
+      if (total_zero_rated_total_turnover !== 0) {
+        total_zr_refund = (sum_min_val * sum_total_itc) / total_zero_rated_total_turnover;
+      }
+      document.getElementById("sum_zr_refund").value = format(total_zr_refund);
+
+      // Inverted Tax Structure Refund formula for Total FY:
+      let total_agg_turnover = sum_agg_turnover;
+      let total_tax_payable = sum_tax_payable;
+      let total_itc_in = sum_itc_in;
+      let total_inv_refund = 0;
+      if (total_agg_turnover !== 0 && sum_total_itc !== 0) {
+        total_inv_refund = (total_itc_in * sum_inv / total_agg_turnover) - (total_tax_payable * total_itc_in / sum_total_itc);
+      }
+      document.getElementById("sum_inv_refund").value = format(total_inv_refund);
+    }
+    
+    function showMessage(message) {
+      const msgBox = document.getElementById('status-message');
+      if (msgBox) {
+        msgBox.innerText = message;
+        msgBox.style.display = 'block';
+        setTimeout(() => {
+          msgBox.style.display = 'none';
+        }, 5000);
+      }
+    }
+    
+    function resetCalculator() {
+        const inputFields = document.querySelectorAll('input[type="text"]');
+        inputFields.forEach(input => {
+            input.value = '';
+        });
+        for (let i = 0; i < 12; i++) {
+            recalc(i);
+        }
+    }
+    
+    function loadSampleData() {
+        const sampleData = [
+            {actual: 2000000, fob: 2100000, noninv: 7500000, inv: 50000000, tax_payable: 2500000, itc_in: 3200000, itc_ser: 400000},
+            {actual: 2005000, fob: 2105000, noninv: 7515000, inv: 50020000, tax_payable: 2501000, itc_in: 3360000, itc_ser: 1200000},
+            {actual: 2010000, fob: 2110000, noninv: 4000000, inv: 50040000, tax_payable: 2502000, itc_in: 3528000, itc_ser: 609857},
+            {actual: 2100000, fob: 2000000, noninv: 4015000, inv: 50060000, tax_payable: 2503000, itc_in: 3704400, itc_ser: 376643},
+            {actual: 2105000, fob: 2005000, noninv: 4030000, inv: 52500000, tax_payable: 2625000, itc_in: 3889620, itc_ser: 376643},
+            {actual: 2000000, fob: 2100000, noninv: 4045000, inv: 70000000, tax_payable: 3500000, itc_in: 2500000, itc_ser: 380000},
+            {actual: 1800000, fob: 1850000, noninv: 8000000, inv: 70020000, tax_payable: 3501000, itc_in: 3889620, itc_ser: 376643},
+            {actual: 1805000, fob: 1855000, noninv: 8015000, inv: 60000000, tax_payable: 3000000, itc_in: 4084101, itc_ser: 450000},
+            {actual: 2100000, fob: 2000000, noninv: 8030000, inv: 60020000, tax_payable: 3001000, itc_in: 4288306.05, itc_ser: 376643},
+            {actual: 2105000, fob: 2005000, noninv: 6500000, inv: 58000000, tax_payable: 2900000, itc_in: 4200000, itc_ser: 792803},
+            {actual: 2100000, fob: 2000000, noninv: 6515000, inv: 58020000, tax_payable: 2901000, itc_in: 4410000, itc_ser: 792803},
+            {actual: 2105000, fob: 2005000, noninv: 6530000, inv: 70000000, tax_payable: 3500000, itc_in: 5000000, itc_ser: 792803}
+        ];
+        
+        sampleData.forEach((data, i) => {
+            document.getElementById(`actual_${i}`).value = data.actual;
+            document.getElementById(`fob_${i}`).value = data.fob;
+            document.getElementById(`noninv_${i}`).value = data.noninv;
+            document.getElementById(`inv_${i}`).value = data.inv;
+            document.getElementById(`tax_payable_${i}`).value = data.tax_payable;
+            document.getElementById(`itc_in_${i}`).value = data.itc_in;
+            document.getElementById(`itc_ser_${i}`).value = data.itc_ser;
+        });
+
+        for (let i = 0; i < 12; i++) {
+            recalc(i);
+        }
+
+        showMessage('Sample data loaded successfully!');
+    }
+
+    function exportToExcel() {
+        const table = document.getElementById('gst-table');
+        
+        const headers = Array.from(table.querySelector('thead tr:first-child').querySelectorAll('th')).map(th => th.innerText.replace(/\s+/g, ' '));
+        const data = Array.from(table.querySelectorAll('tbody tr')).map(row => {
+            return Array.from(row.querySelectorAll('td')).map(cell => {
+                const input = cell.querySelector('input');
+                return input ? input.value : cell.innerText;
+            });
+        });
+
+        // Add headers to the data
+        data.unshift(headers);
+        
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "GST Refund Data");
+        
+        XLSX.writeFile(workbook, "GST_Refund_Calculator.xlsx");
+
+        showMessage('Data downloaded successfully as Excel!');
+    }
+
+    window.onload = function() {
+      // Show the welcome modal on first load
+      if (localStorage.getItem('showWelcomeMessage') === null) {
+          document.getElementById('welcome-modal').style.display = 'flex';
+      }
+
+      const inputFields = document.querySelectorAll('input[type="text"]');
+      inputFields.forEach(input => {
+        // Only add listeners to editable fields, as readonly fields don't need them
+        if (!input.readOnly) {
+            input.addEventListener('input', (event) => {
+              // Reformat the number to Indian style as the user types
+              let value = event.target.value.replace(/,/g, '');
+              if (!isNaN(value) && value !== '') {
+                  event.target.value = format(parseFloat(value));
+              }
+              const rowIndex = input.id.split('_')[1];
+              recalc(rowIndex);
+            });
+        }
+      });
+      
+      // Initial calculation after page load and potential data load
+      for (let i = 0; i < 12; i++) {
+        recalc(i);
+      }
+    };
+  </script>
+</body>
+</html>
